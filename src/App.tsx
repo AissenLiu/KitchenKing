@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Chef, Dish } from './types';
 import { CUISINES, callAllChefsWithProgress } from './services/deepseekApi';
 import { generateChefId } from './utils/helpers';
 import IngredientInput from './components/IngredientInput';
 import ChefCard from './components/ChefCard';
 import DishDetail from './components/DishDetail';
+import { useBackgroundMusic } from './hooks/useBackgroundMusic';
 
 const App: React.FC = () => {
   const [chefs, setChefs] = useState<Chef[]>([]);
@@ -13,6 +14,12 @@ const App: React.FC = () => {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [apiKey] = useState('sk-26801bf0212a4cbeb0dc4ecc14e5e7b5');
+
+  // 背景音乐控制
+  const backgroundMusic = useBackgroundMusic('/background-music.mp3', {
+    volume: 0.2,
+    loop: true
+  });
 
   // 初始化厨师
   const initializeChefs = () => {
@@ -30,6 +37,9 @@ const App: React.FC = () => {
   const handleGenerate = async (ingredients: string) => {
 
     setIsLoading(true);
+    
+    // 开始播放背景音乐
+    backgroundMusic.play();
     
     // 初始化厨师状态
     const initialChefs = initializeChefs().map(chef => ({
@@ -88,6 +98,8 @@ const App: React.FC = () => {
       })));
     } finally {
       setIsLoading(false);
+      // 停止背景音乐
+      backgroundMusic.stop();
     }
   };
 
@@ -110,7 +122,25 @@ const App: React.FC = () => {
     setIsLoading(false);
     setIsModalOpen(false);
     setSelectedDish(null);
+    // 停止背景音乐
+    backgroundMusic.stop();
   };
+
+  // 监听所有厨师任务完成状态
+  useEffect(() => {
+    if (chefs.length > 0 && !isLoading) {
+      const allFinished = chefs.every(chef => 
+        chef.status === 'completed' || chef.status === 'error'
+      );
+      
+      if (allFinished && backgroundMusic.isPlaying) {
+        // 延迟3秒后停止音乐，让用户听到完整的循环
+        setTimeout(() => {
+          backgroundMusic.stop();
+        }, 3000);
+      }
+    }
+  }, [chefs, isLoading, backgroundMusic]);
 
   // 检查是否需要显示API Key输入
   const showApiKeyInput = false;
@@ -185,17 +215,27 @@ const App: React.FC = () => {
                     <span>失败: {chefs.filter(c => c.status === 'error').length}</span>
                   </div>
                 </div>
-                <button
-                  onClick={handleReset}
-                  disabled={isLoading || chefs.some(chef => chef.status === 'cooking')}
-                  className={`px-3 py-2 sm:px-4 sm:py-2 md:px-6 btn-pixel text-xs sm:text-sm md:text-base transition-transform ${
-                    isLoading || chefs.some(chef => chef.status === 'cooking')
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:scale-105'
-                  }`}
-                >
-                  重新开始
-                </button>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {/* 音乐控制按钮 */}
+                  <button
+                    onClick={() => backgroundMusic.isPlaying ? backgroundMusic.pause() : backgroundMusic.play()}
+                    className="px-2 py-2 sm:px-3 sm:py-2 btn-pixel text-xs sm:text-sm transition-transform hover:scale-105"
+                    title={backgroundMusic.isPlaying ? '暂停音乐' : '播放音乐'}
+                  >
+                    {backgroundMusic.isPlaying ? '🔇' : '🎵'}
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    disabled={isLoading || chefs.some(chef => chef.status === 'cooking')}
+                    className={`px-3 py-2 sm:px-4 sm:py-2 md:px-6 btn-pixel text-xs sm:text-sm md:text-base transition-transform ${
+                      isLoading || chefs.some(chef => chef.status === 'cooking')
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:scale-105'
+                    }`}
+                  >
+                    重新开始
+                  </button>
+                </div>
               </div>
 
               {/* 厨师卡片网格 */}
