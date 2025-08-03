@@ -142,9 +142,6 @@ const App: React.FC = () => {
     }
   }, [chefs, isLoading, backgroundMusic]);
 
-  // 检查是否需要显示API Key输入
-  const showApiKeyInput = false;
-
   // 按完成顺序排序厨师
   const sortedChefs = [...chefs].sort((a, b) => {
     const aIndex = completionOrder.indexOf(a.cuisine);
@@ -240,7 +237,7 @@ const App: React.FC = () => {
 
               {/* 厨师卡片网格 */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                {sortedChefs.map((chef, index) => (
+                {sortedChefs.map((chef) => (
                   <div key={chef.id} className="relative group">
                     {/* 奖牌角标 */}
                     {getMedalEmoji(chef.cuisine) && (

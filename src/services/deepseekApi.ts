@@ -176,7 +176,7 @@ const generatePrompt = (ingredients: string, cuisine: string): string => {
 2. **${cuisine}特色**：充分体现${cuisine}的烹饪特点
 3. **详细步骤**：提供完整的制作流程
 4. **技术要点**：包含火候控制、预处理技巧等专业指导
-5. **所有文字都配上Emoji**
+5. **除了菜品名字外的所有文字都配上Emoji**
 
 **幽默模式额外要求**（当判断为幽默模式时）：
 - 用夸张和网络梗的风格描述
